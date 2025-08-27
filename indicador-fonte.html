@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Indicador — Fonte de Madeira</title>
+<style>
+  :root{ --bg:#f6f7fb; --card:#fff; --txt:#1f2937; --p:#8b0000; --pt:#a63838; --t:#c25b5b; --shadow:0 8px 24px rgba(0,0,0,.08); }
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);font:500 16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  .wrap{max-width:720px;margin:0 auto;padding:16px}
+  .card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:18px}
+  h1{margin:0 0 6px;font-size:18px;color:var(--txt)}
+  .row{display:flex;align-items:center;gap:12px;margin:10px 0}
+  .label{min-width:260px;font-size:14px;color:#374151}
+  .pct{margin-left:auto;font-weight:700;font-size:26px;color:#111}
+  .bar{height:8px;border-radius:999px;background:#e5e7eb;overflow:hidden}
+  .fill{height:100%}
+  .legend{display:flex;gap:12px;margin-top:10px;font-size:13px;color:#4b5563;flex-wrap:wrap}
+  .dot{width:12px;height:12px;border-radius:50%}
+  footer{margin-top:8px;font-size:12px;color:#6b7280}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Fonte de Madeira</h1>
+
+    <div class="row"><div class="label">Própria</div><div class="pct" id="pctP">--%</div></div>
+    <div class="bar"><div class="fill" id="barP" style="background:var(--p);width:0%"></div></div>
+
+    <div class="row"><div class="label">Própria / Terceiros</div><div class="pct" id="pctPT">--%</div></div>
+    <div class="bar"><div class="fill" id="barPT" style="background:var(--pt);width:0%"></div></div>
+
+    <div class="row"><div class="label">Terceiros</div><div class="pct" id="pctT">--%</div></div>
+    <div class="bar"><div class="fill" id="barT" style="background:var(--t);width:0%"></div></div>
+
+    <div class="legend">
+      <div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--p)"></span> Própria</div>
+      <div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--pt)"></span> Própria/Terceiros</div>
+      <div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--t)"></span> Terceiros</div>
+    </div>
+
+    <footer>Fonte: Caracterização de Fornecedores (seus dados)</footer>
+  </div>
+</div>
+<script>
+  // Dados: Própria=13, Própria/Terceiros=9, Terceiros=8
+  const v = { p:13, pt:9, t:8 }, tot = v.p + v.pt + v.t;
+  const pct = x => (tot ? (Math.round(x/tot*1000)/10).toFixed(1) : 0) + '%';
+  document.getElementById('pctP').textContent  = pct(v.p);
+  document.getElementById('pctPT').textContent = pct(v.pt);
+  document.getElementById('pctT').textContent  = pct(v.t);
+  document.getElementById('barP').style.width  = (v.p /tot*100)+'%';
+  document.getElementById('barPT').style.width = (v.pt/tot*100)+'%';
+  document.getElementById('barT').style.width  = (v.t /tot*100)+'%';
+</script>
+</body>
+</html>
