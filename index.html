@@ -55,9 +55,7 @@
       "Fonte de Madeira": "#8b0000"
     };
 
-    // =========================
-    // 2) UTILITÁRIOS
-    // =========================
+    // aplica a cor do tema nas fatias filhas
     function applyColors(node){
       if(node.children){
         node.itemStyle = node.itemStyle || {};
@@ -71,7 +69,7 @@
     }
     data.children.forEach(applyColors);
 
-    // quebra nomes longos
+    // quebra nomes longos em múltiplas linhas
     function wrapName(name, maxPerLine) {
       if (!name) return '';
       const words = String(name).split(' ');
@@ -90,27 +88,6 @@
       return lines.join('\n');
     }
 
-    // contraste do rótulo
-    function hexToRgb(hex) {
-      const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [0,0,0];
-    }
-    function luminance(hex) {
-      const [r,g,b] = hexToRgb(hex).map(v => {
-        v /= 255;
-        return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4);
-      });
-      return 0.2126*r + 0.7152*g + 0.0722*b;
-    }
-    function labelColorForTheme(themeName) {
-      const bg = palette[themeName] || "#666";
-      return luminance(bg) > 0.55 ? "#111" : "#fff";
-    }
-    function themeOf(p) {
-      // treePathInfo: [root, tema, item]
-      return p && p.treePathInfo && p.treePathInfo[1] ? p.treePathInfo[1].name : undefined;
-    }
-
     // =========================
     // 3) GRÁFICO
     // =========================
@@ -123,31 +100,34 @@
         radius: [50, '90%'],
         sort: null,
 
-        // >>> desativa comportamento de clique/zoom/drilldown
+        // sem interação de clique (apenas hover)
         nodeClick: false,
         selectedMode: false,
-
-        // destaque só quando passar o mouse
         emphasis: { focus: 'self', blurScope: 'coordinateSystem' },
 
-        // rótulos padrão
+        // rótulo padrão (branco + sombra leve)
         label: {
           show: true,
           rotate: 'tangential',
-          minAngle: 4
+          minAngle: 4,
+          color: '#ffffff',
+          textShadowColor: 'rgba(0,0,0,0.45)',
+          textShadowBlur: 2
         },
 
         levels: [
-          {}, // raiz oculta
+          {}, // raiz
 
           // Anel interno (TEMAS)
           {
             r0: 50, r: 120,
             label: {
               rotate: 0,
-              fontWeight: 'normal',     // sem negrito
-              fontSize: 8,              // fonte 8
-              color: p => labelColorForTheme(p.name),
+              fontWeight: 'normal',
+              fontSize: 8,
+              color: '#ffffff',
+              textShadowColor: 'rgba(0,0,0,0.45)',
+              textShadowBlur: 2,
               overflow: 'break',
               lineHeight: 10,
               formatter: p => wrapName(p.name, 18)
@@ -160,8 +140,10 @@
             label: {
               show: true,
               rotate: 'tangential',
-              fontSize: 8,              // fonte 8
-              color: p => labelColorForTheme(themeOf(p)),
+              fontSize: 8,
+              color: '#ffffff',
+              textShadowColor: 'rgba(0,0,0,0.45)',
+              textShadowBlur: 2,
               minAngle: 4,
               overflow: 'break',
               lineHeight: 10,
@@ -176,7 +158,7 @@
       }
     });
 
-    // Garantia extra: se ainda houver algum efeito ao clicar, "limpa" na hora
+    // segurança extra: ignora qualquer seleção após clique
     chart.on('click', function () {
       chart.dispatchAction({ type: 'downplay', seriesIndex: 0 });
     });
