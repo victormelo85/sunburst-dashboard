@@ -12,27 +12,27 @@
     --shadow:0 10px 30px rgba(0,0,0,.10);
   }
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);font:500 16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--txt)}
+  html,body{margin:0;background:var(--bg);font:500 14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--txt)}
   .layout{
     display:grid;
-    grid-template-columns: minmax(360px, 1fr) 460px;  /* direita fixa para não cortar */
-    gap:16px; max-width:1400px; margin:0 auto; padding:16px;
+    grid-template-columns: minmax(340px, 1fr) 380px; /* indicador mais estreito */
+    gap:12px; max-width:1400px; margin:0 auto; padding:12px;
     align-items:start;
   }
-  .card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:16px}
-  #chart{width:100%; height:clamp(420px, 72vh, 900px);} /* responsivo e sem corte */
-  h1{margin:0 0 8px;font-size:18px}
-  .muted{color:#6b7280;font-size:13px}
-  .ind-title{display:flex;align-items:flex-end;gap:8px}
-  .chip{padding:4px 10px;border-radius:999px;background:#eef2ff;color:#334155;font-weight:600;font-size:12px}
-  .rows{margin-top:8px}
-  .row{display:flex;align-items:center;gap:12px;margin:14px 0}
-  .label{min-width:260px;font-size:14px;color:#374151}
-  .pct{margin-left:auto;font-weight:800;font-size:28px;color:#111}
-  .bar{height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden}
+  .card{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:12px}
+  #chart{width:100%; height:clamp(360px, 66vh, 820px);} /* sem corte em embed */
+  h1{margin:0 0 6px;font-size:16px}
+  .muted{color:#6b7280;font-size:12px}
+  .ind-title{display:flex;align-items:flex-end;gap:6px}
+  .chip{padding:3px 8px;border-radius:999px;background:#eef2ff;color:#334155;font-weight:600;font-size:10.5px}
+  .rows{margin-top:6px}
+  .row{display:flex;align-items:center;gap:10px;margin:10px 0}
+  .label{min-width:200px;font-size:12.5px;color:#374151}
+  .pct{margin-left:auto;font-weight:800;font-size:22px;color:#111}
+  .bar{height:8px;border-radius:999px;background:#e5e7eb;overflow:hidden}
   .fill{height:100%}
-  .legend{display:flex;gap:14px;margin-top:12px;font-size:13px;color:#4b5563;flex-wrap:wrap}
-  .dot{width:12px;height:12px;border-radius:50%}
+  .legend{display:flex;gap:12px;margin-top:8px;font-size:12px;color:#4b5563;flex-wrap:wrap}
+  .dot{width:10px;height:10px;border-radius:50%}
 </style>
 </head>
 <body>
@@ -41,10 +41,10 @@
   <div class="card">
     <h1>Caracterização de Fornecedores de lenha e cavaco - RS</h1>
     <div id="chart"></div>
-    <div class="muted">Clique em qualquer fatia para atualizar o indicador ao lado. Passe o mouse para ver o <b>Total</b> e o <b>%</b>.</div>
+    <div class="muted">Clique no gráfico para atualizar o indicador ao lado. Passe o mouse para ver <b>Total</b> e <b>%</b>.</div>
   </div>
 
-  <!-- DIREITA: INDICADOR DINÂMICO -->
+  <!-- DIREITA: INDICADOR DINÂMICO (fonte reduzida) -->
   <div class="card" id="panel">
     <div class="ind-title">
       <h1 id="indTitle">—</h1>
@@ -52,15 +52,15 @@
     </div>
     <div class="rows" id="rows"></div>
     <div class="legend" id="legend"></div>
-    <div class="muted" style="margin-top:8px">Caracterização de Fornecedores (seus dados)</div>
+    <div class="muted" style="margin-top:6px">Caracterização de Fornecedores (seus dados)</div>
   </div>
 </div>
 
 <script>
   // ---------- CONFIG ----------
-  const DEFAULT_THEME = "Colheita Florestal"; // Troque se quiser outro tema inicial
+  const DEFAULT_THEME = "Colheita Florestal";
 
-  // ---------- DADOS (ajustados ao CSV que você enviou) ----------
+  // ---------- DADOS (ajustados) ----------
   const data = {
     name: "Caracterização",
     children: [
@@ -90,7 +90,7 @@
     ]
   };
 
-  // Cores do sunburst (hex explícito)
+  // Cores do sunburst (hex)
   const themeColorHEX = {
     "Perfil": "#f28e2c",
     "Tamanho Propriedade": "#6f6f6f",
@@ -99,7 +99,6 @@
     "Fonte de Madeira": "#8b0000"
   };
 
-  // pinta filhos com a cor do TEMA
   function colorize(node){
     if(node.children){
       node.itemStyle = node.itemStyle || {};
@@ -113,13 +112,9 @@
   }
   data.children.forEach(colorize);
 
-  // util: soma valores dos filhos
-  function sumChildren(node){
-    return (node.children || []).reduce((s,c)=>s + (c.value || 0), 0);
-  }
-
-  // quebra de linhas p/ rótulos
-  function wrap(name, max){ const w = String(name).split(' '); const out=[]; let cur='';
+  // util
+  function sumChildren(node){ return (node.children||[]).reduce((s,c)=>s+(c.value||0),0); }
+  function wrap(name, max){ const w=String(name).split(' '), out=[]; let cur='';
     w.forEach(s=>{ const t=(cur+' '+s).trim(); if(t.length>max){ if(cur) out.push(cur); cur=s; } else cur=t; });
     if(cur) out.push(cur); return out.join('\n');
   }
@@ -161,18 +156,16 @@
       trigger: 'item',
       borderWidth: 0,
       backgroundColor: 'rgba(17,17,17,.9)',
-      textStyle: { color:'#fff' },
+      textStyle: { color:'#fff', fontSize:12 },
+      padding:8,
       formatter: (p) => {
-        const path = (p.treePathInfo||[]).map(d=>d.name).slice(1); // tira a raiz
-        // Se for filho: % relativo ao tema (pai). Se for tema: % do total geral
-        let pct = 0, base = 0;
+        const path = (p.treePathInfo||[]).map(d=>d.name).slice(1);
+        let pct=0, base=0;
         if ((p.treePathInfo||[]).length >= 3) {
-          // filho → base = soma do tema
           const themeName = p.treePathInfo[1].name;
           const themeNode = data.children.find(d=>d.name===themeName);
           base = sumChildren(themeNode);
         } else {
-          // tema → base = total geral
           base = data.children.reduce((s,n)=> s + sumChildren(n), 0);
         }
         pct = base ? (p.value / base * 100) : 0;
@@ -181,15 +174,12 @@
     }
   });
 
-  // ------------------------------------------------
-  // INDICADOR DINÂMICO
-  // ------------------------------------------------
+  // -------- INDICADOR (com tipografia menor) --------
   const rowsEl   = document.getElementById('rows');
   const legendEl = document.getElementById('legend');
   const titleEl  = document.getElementById('indTitle');
   const chipEl   = document.getElementById('indChip');
 
-  // Paleta dos painéis (usa CSS var() pois é DOM, não canvas)
   const colorsPanel = {
     perfil: { a:"var(--perfil)", b:"#f7b267" },
     tamanho: { a:"var(--tam)", b:"#8a8a8a", c:"#a3a3a3" },
@@ -271,7 +261,6 @@
     }
   });
 
-  // resize
   window.addEventListener('resize', ()=>chart.resize());
 </script>
 </body>
