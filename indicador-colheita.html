@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Indicador — Colheita Florestal</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --card:#ffffff; --txt:#1f2937;
+    --semi:#8bc34a; --meca:#5e9e2f;
+    --shadow:0 8px 24px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font:500 16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  .wrap{max-width:720px;margin:0 auto;padding:16px}
+  .card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:18px}
+  h1{margin:0 0 6px;font-size:18px;color:var(--txt)}
+  .row{display:flex;align-items:center;gap:12px;margin:10px 0}
+  .label{min-width:160px;font-size:14px;color:#374151}
+  .pct{margin-left:auto;font-weight:700;font-size:26px;color:#111}
+  .bar{height:8px;border-radius:999px;background:#e5e7eb;overflow:hidden}
+  .fill{height:100%}
+  .legend{display:flex;gap:12px;margin-top:10px;font-size:13px;color:#4b5563}
+  .dot{width:12px;height:12px;border-radius:50%}
+  footer{margin-top:8px;font-size:12px;color:#6b7280}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Colheita Florestal</h1>
+
+    <div class="row">
+      <div class="label">Semimecanizada</div>
+      <div class="pct" id="pctSemi">--%</div>
+    </div>
+    <div class="bar"><div class="fill" id="barSemi" style="background:var(--semi);width:0%"></div></div>
+
+    <div class="row">
+      <div class="label">Mecanizada</div>
+      <div class="pct" id="pctMeca">--%</div>
+    </div>
+    <div class="bar"><div class="fill" id="barMeca" style="background:var(--meca);width:0%"></div></div>
+
+    <div class="legend">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="dot" style="background:var(--semi)"></span> Semimecanizada
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="dot" style="background:var(--meca)"></span> Mecanizada
+      </div>
+    </div>
+
+    <footer>Fonte: Caracterização de Fornecedores (seus dados)</footer>
+  </div>
+</div>
+
+<script>
+  // Valores do seu estudo (colheita): Semimecanizada=22, Mecanizada=8
+  const valores = { semi: 22, meca: 8 };
+  const total = valores.semi + valores.meca;
+  const pSemi = total ? (valores.semi/total*100) : 0;
+  const pMeca = total ? (valores.meca/total*100) : 0;
+  function pct(x){ return (Math.round(x*10)/10).toFixed(1) + '%'; }
+
+  document.getElementById('pctSemi').textContent = pct(pSemi);
+  document.getElementById('pctMeca').textContent = pct(pMeca);
+  document.getElementById('barSemi').style.width = pSemi+'%';
+  document.getElementById('barMeca').style.width = pMeca+'%';
+</script>
+</body>
+</html>
