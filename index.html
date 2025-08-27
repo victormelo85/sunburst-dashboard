@@ -103,16 +103,29 @@
         // sem interação de clique (apenas hover)
         nodeClick: false,
         selectedMode: false,
-        emphasis: { focus: 'self', blurScope: 'coordinateSystem' },
+        emphasis: { focus: 'self', blurScope: 'coordinateSystem',
+          label: { color: '#fff' }  // garante branco no hover
+        },
 
-        // rótulo padrão (branco + sombra leve)
+        // estilo base dos rótulos (branco + leve contorno)
         label: {
           show: true,
           rotate: 'tangential',
           minAngle: 4,
           color: '#ffffff',
           textShadowColor: 'rgba(0,0,0,0.45)',
-          textShadowBlur: 2
+          textShadowBlur: 2,
+          rich: {
+            w: {                // estilo "white"
+              color: '#ffffff',
+              fontSize: 8,
+              lineHeight: 10,
+              textShadowColor: 'rgba(0,0,0,0.45)',
+              textShadowBlur: 2
+            }
+          },
+          // usa sempre o estilo "w" (evita herdar cor da fatia)
+          formatter: p => `{w|${wrapName(p.name, 14)}}`
         },
 
         levels: [
@@ -124,13 +137,12 @@
             label: {
               rotate: 0,
               fontWeight: 'normal',
-              fontSize: 8,
-              color: '#ffffff',
-              textShadowColor: 'rgba(0,0,0,0.45)',
-              textShadowBlur: 2,
-              overflow: 'break',
-              lineHeight: 10,
-              formatter: p => wrapName(p.name, 18)
+              // mesmo "rich" + formatter para garantir branco
+              rich: {
+                w: { color: '#ffffff', fontSize: 8, lineHeight: 10,
+                     textShadowColor: 'rgba(0,0,0,0.45)', textShadowBlur: 2 }
+              },
+              formatter: p => `{w|${wrapName(p.name, 18)}}`
             }
           },
 
@@ -138,16 +150,12 @@
           {
             r0: 120, r: '90%',
             label: {
-              show: true,
               rotate: 'tangential',
-              fontSize: 8,
-              color: '#ffffff',
-              textShadowColor: 'rgba(0,0,0,0.45)',
-              textShadowBlur: 2,
-              minAngle: 4,
-              overflow: 'break',
-              lineHeight: 10,
-              formatter: p => wrapName(p.name, 14)
+              rich: {
+                w: { color: '#ffffff', fontSize: 8, lineHeight: 10,
+                     textShadowColor: 'rgba(0,0,0,0.45)', textShadowBlur: 2 }
+              },
+              formatter: p => `{w|${wrapName(p.name, 14)}}`
             }
           }
         ]
@@ -167,3 +175,4 @@
   </script>
 </body>
 </html>
+
