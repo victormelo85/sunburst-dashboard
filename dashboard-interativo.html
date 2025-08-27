@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard Interativo — Sunburst + Indicador</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root{
+    --bg:#f6f7fb; --card:#fff; --txt:#111;
+    --perfil:#f28e2c; --tam:#6f6f6f; --cap:#4d87bd; --col:#8bc34a; --fon:#8b0000;
+    --shadow:0 10px 30px rgba(0,0,0,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font:500 16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--txt)}
+  .layout{display:grid;grid-template-columns:minmax(320px,1.2fr) minmax(320px,0.9fr);gap:16px;max-width:1400px;margin:0 auto;padding:16px}
+  .card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:16px}
+  #chart{height:calc(100vh - 48px);min-height:520px}
+  h1{margin:0 0 8px;font-size:18px}
+  .muted{color:#6b7280;font-size:13px}
+  .ind-title{display:flex;align-items:flex-end;gap:8px}
+  .chip{padding:4px 10px;border-radius:999px;background:#eef2ff;color:#334155;font-weight:600;font-size:12px}
+  .rows{margin-top:8px}
+  .row{display:flex;align-items:center;gap:12px;margin:14px 0}
+  .label{min-width:260px;font-size:14px;color:#374151}
+  .pct{margin-left:auto;font-weight:800;font-size:28px;color:#111}
+  .bar{height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden}
+  .fill{height:100%}
+  .legend{display:flex;gap:14px;margin-top:12px;font-size:13px;color:#4b5563;flex-wrap:wrap}
+  .dot{width:12px;height:12px;border-radius:50%}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- ESQUERDA: SUNBURST -->
+  <div class="card">
+    <h1>Caracterização de Fornecedores de lenha e cavaco - RS</h1>
+    <div id="chart"></div>
+    <div class="muted">Clique em qualquer fatia para atualizar o indicador ao lado.</div>
+  </div>
+
+  <!-- DIREITA: INDICADOR DINÂMICO -->
+  <div class="card" id="panel">
+    <div class="ind-title">
+      <h1 id="indTitle">Tamanho da Propriedade</h1>
+      <span class="chip" id="indChip">selecionado: —</span>
+    </div>
+    <div class="rows" id="rows"></div>
+    <div class="legend" id="legend"></div>
+    <div class="muted" style="margin-top:8px">Fonte: Caracterização de Fornecedores (seus dados)</div>
+  </div>
+</div>
+
+<script>
+  // ------------------------------
+  // DADOS (os mesmos do estudo)
+  // ------------------------------
+  const data = {
+    name: "Caracterização",
+    children: [
+      { name: "Perfil", children: [
+        { name: "Silvicultor", value: 50 },
+        { name: "Compra madeira em pé", value: 10 }
+      ]},
+      { name: "Tamanho Propriedade", children: [
+        { name: "Pequena (<10ha)", value: 13 },
+        { name: "Médio (10ha<100ha)", value: 10 },
+        { name: "Grande (>100ha)", value: 7 }
+      ]},
+      { name: "Capacidade de Fornecimento", children: [
+        { name: "Grande (> 10.000 m3/ano)", value: 13 },
+        { name: "Médio (1.000 - 10.000 m3/ano)", value: 8 },
+        { name: "Pouco (1-1.000 m3/ano)", value: 9 }
+      ]},
+      { name: "Colheita Florestal", children: [
+        { name: "Mecanizada", value: 8 },
+        { name: "Semimecanizada", value: 22 }
+      ]},
+      { name: "Fonte de Madeira", children: [
+        { name: "Própria", value: 13 },
+        { name: "Própria/Terceiros", value: 9 },
+        { name: "Terceiros", value: 8 }
+      ]}
+    ]
+  };
+
+  // Paleta por TEMA
+  const themeColor = {
+    "Perfil": "var(--perfil)",
+    "Tamanho Propriedade": "var(--tam)",
+    "Capacidade de Fornecimento": "var(--cap)",
+    "Colheita Florestal": "var(--col)",
+    "Fonte de Madeira": "var(--fon)"
+  };
+
+  // -----------------------------------
+  // ECHARTS: SUNBURST (clique = ação)
+  // -----------------------------------
+  // pinta filhos com a cor do TEMA
+  function colorize(node){
+    if(node.children){
+      node.itemStyle = node.itemStyle || {};
+      node.itemStyle.color = themeColor[node.name] || node.itemStyle.color;
+      node.children.forEach(c=>{
+        c.itemStyle = c.itemStyle || {};
+        c.itemStyle.color = themeColor[node.name] || c.itemStyle.color;
+      });
+      node.children.forEach(colorize);
+    }
+  }
+  data.children.forEach(colorize);
+
+  // quebra de linhas p/ rótulos
+  function wrap(name, max){ const w = String(name).split(' '); const out=[]; let cur='';
+    w.forEach(s=>{ const t=(cur+' '+s).trim(); if(t.length>max){ if(cur) out.push(cur); cur=s; } else cur=t; });
+    if(cur) out.push(cur); return out.join('\n');
+  }
+
+  const chart = echarts.init(document.getElementById('chart'));
+  chart.setOption({
+    series: [{
+      type: 'sunburst',
+      data: data.children,
+      radius: [50, '90%'],
+      sort: null,
+      nodeClick: false,                 // não faz drilldown
+      emphasis: { focus: 'self' },
+      label: {
+        show: true, rotate: 'tangential', minAngle: 4,
+        color: '#fff', textShadowColor: 'rgba(0,0,0,.45)', textShadowBlur: 2,
+        rich:{w:{color:'#fff',fontSize:8,lineHeight:10,textShadowColor:'rgba(0,0,0,.45)',textShadowBlur:2}},
+        formatter: p=>`{w|${wrap(p.name,14)}}`
+      },
+      levels: [
+        {},
+        { r0:50, r:120,
+          label:{
+            rotate:0,
+            rich:{w:{color:'#fff',fontSize:8,lineHeight:10,textShadowColor:'rgba(0,0,0,.45)',textShadowBlur:2}},
+            formatter: p=>`{w|${wrap(p.name,18)}}`
+          }
+        },
+        { r0:120, r:'90%',
+          label:{
+            rotate:'tangential',
+            rich:{w:{color:'#fff',fontSize:8,lineHeight:10,textShadowColor:'rgba(0,0,0,.45)',textShadowBlur:2}},
+            formatter: p=>`{w|${wrap(p.name,14)}}`
+          }
+        }
+      ]
+    }]
+  });
+
+  // ------------------------------------------------
+  // INDICADOR DINÂMICO (gera linhas + barras + %)
+  // ------------------------------------------------
+  const rowsEl   = document.getElementById('rows');
+  const legendEl = document.getElementById('legend');
+  const titleEl  = document.getElementById('indTitle');
+  const chipEl   = document.getElementById('indChip');
+
+  // Mapa para criar o indicador por TEMA
+  // (ordem das linhas e rótulos)
+  const indicatorMap = {
+    "Perfil": [
+      { key:"Silvicultor"           , color:"var(--perfil)" },
+      { key:"Compra madeira em pé"  , color:"#f7b267" }
+    ],
+    "Tamanho Propriedade": [
+      { key:"Pequena (<10ha)"       , color:"var(--tam)" },
+      { key:"Médio (10ha<100ha)"    , color:"#8a8a8a"   },
+      { key:"Grande (>100ha)"       , color:"#a3a3a3"   }
+    ],
+    "Capacidade de Fornecimento": [
+      { key:"Grande (> 10.000 m3/ano)", color:"var(--cap)" },
+      { key:"Médio (1.000 - 10.000 m3/ano)", color:"#6ba1d3" },
+      { key:"Pouco (1-1.000 m3/ano)" , color:"#88b8e3" }
+    ],
+    "Colheita Florestal": [
+      { key:"Semimecanizada" , color:"var(--col)" },
+      { key:"Mecanizada"     , color:"#5e9e2f" }
+    ],
+    "Fonte de Madeira": [
+      { key:"Própria"           , color:"var(--fon)"  },
+      { key:"Própria/Terceiros" , color:"#a63838" },
+      { key:"Terceiros"         , color:"#c25b5b" }
+    ]
+  };
+
+  // procura os valores de um TEMA
+  function getThemeValues(theme){
+    const node = data.children.find(d=>d.name===theme);
+    if(!node) return [];
+    return node.children.map(c=>({ name:c.name, value:c.value }));
+  }
+
+  // renderiza o indicador para um TEMA
+  function renderIndicator(theme, clickedLabel){
+    const defs = indicatorMap[theme]; if(!defs) return;
+    const vals = getThemeValues(theme);
+    const total = vals.reduce((s,x)=>s+x.value,0);
+
+    titleEl.textContent = theme;
+    chipEl.textContent  = clickedLabel ? `selecionado: ${clickedLabel}` : 'selecionado: —';
+    rowsEl.innerHTML = ''; legendEl.innerHTML = '';
+
+    defs.forEach(def=>{
+      const v = (vals.find(x=>x.name===def.key) || {value:0}).value;
+      const pct = total? (Math.round(v/total*1000)/10) : 0;
+      const row = document.createElement('div'); row.className='row';
+      row.innerHTML = `
+        <div class="label">${def.key}</div>
+        <div class="pct">${pct.toFixed(1)}%</div>
+      `;
+      const bar = document.createElement('div'); bar.className='bar';
+      const fill= document.createElement('div'); fill.className='fill';
+      fill.style.background = def.color; fill.style.width = pct+'%';
+      bar.appendChild(fill); rowsEl.appendChild(row); rowsEl.appendChild(bar);
+
+      const lg = document.createElement('div'); lg.style.display='flex'; lg.style.alignItems='center'; lg.style.gap='6px';
+      lg.innerHTML = `<span class="dot" style="background:${def.color}"></span> ${def.key}`;
+      legendEl.appendChild(lg);
+    });
+  }
+
+  // inicial: mostra "Tamanho Propriedade"
+  renderIndicator("Tamanho Propriedade");
+
+  // clique numa fatia → pega o TEMA (nível 1) e atualiza painel
+  chart.on('click', (p)=>{
+    const tpi = p.treePathInfo || [];
+    const theme = tpi[1] ? tpi[1].name : p.name;
+    if (indicatorMap[theme]) {
+      // rótulo clicado (útil para mostrar no chip)
+      const clickedLabel = (tpi.length>=3 ? tpi[2].name : '');
+      renderIndicator(theme, clickedLabel);
+    }
+  });
+
+  // resize
+  window.addEventListener('resize', ()=>chart.resize());
+</script>
+</body>
+</html>
