@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Indicador — Tamanho da Propriedade</title>
+<style>
+  :root{ --bg:#f6f7fb; --card:#fff; --txt:#1f2937; --peq:#6f6f6f; --med:#8a8a8a; --gra:#a3a3a3; --shadow:0 8px 24px rgba(0,0,0,.08); }
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);font:500 16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  .wrap{max-width:720px;margin:0 auto;padding:16px}
+  .card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:18px}
+  h1{margin:0 0 6px;font-size:18px;color:var(--txt)}
+  .row{display:flex;align-items:center;gap:12px;margin:10px 0}
+  .label{min-width:260px;font-size:14px;color:#374151}
+  .pct{margin-left:auto;font-weight:700;font-size:26px;color:#111}
+  .bar{height:8px;border-radius:999px;background:#e5e7eb;overflow:hidden}
+  .fill{height:100%}
+  .legend{display:flex;gap:12px;margin-top:10px;font-size:13px;color:#4b5563;flex-wrap:wrap}
+  .dot{width:12px;height:12px;border-radius:50%}
+  footer{margin-top:8px;font-size:12px;color:#6b7280}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Tamanho da Propriedade</h1>
+
+    <div class="row"><div class="label">Pequena (&lt; 10 ha)</div><div class="pct" id="pctPeq">--%</div></div>
+    <div class="bar"><div class="fill" id="barPeq" style="background:var(--peq);width:0%"></div></div>
+
+    <div class="row"><div class="label">Média (10–100 ha)</div><div class="pct" id="pctMed">--%</div></div>
+    <div class="bar"><div class="fill" id="barMed" style="background:var(--med);width:0%"></div></div>
+
+    <div class="row"><div class="label">Grande (&gt; 100 ha)</div><div class="pct" id="pctGra">--%</div></div>
+    <div class="bar"><div class="fill" id="barGra" style="background:var(--gra);width:0%"></div></div>
+
+    <div class="legend">
+      <div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--peq)"></span> Pequena</div>
+      <div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--med)"></span> Média</div>
+      <div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--gra)"></span> Grande</div>
+    </div>
+
+    <footer>Fonte: Caracterização de Fornecedores (seus dados)</footer>
+  </div>
+</div>
+<script>
+  // Dados: Pequena=13, Média=10, Grande=7
+  const v = { peq:13, med:10, gra:7 }, tot = v.peq + v.med + v.gra;
+  const pct = x => (tot ? (Math.round(x/tot*1000)/10).toFixed(1) : 0) + '%';
+  document.getElementById('pctPeq').textContent = pct(v.peq);
+  document.getElementById('pctMed').textContent = pct(v.med);
+  document.getElementById('pctGra').textContent = pct(v.gra);
+  document.getElementById('barPeq').style.width = (v.peq/tot*100)+'%';
+  document.getElementById('barMed').style.width = (v.med/tot*100)+'%';
+  document.getElementById('barGra').style.width = (v.gra/tot*100)+'%';
+</script>
+</body>
+</html>
