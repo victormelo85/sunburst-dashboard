@@ -71,6 +71,7 @@
     }
     data.children.forEach(applyColors);
 
+    // quebra nomes longos
     function wrapName(name, maxPerLine) {
       if (!name) return '';
       const words = String(name).split(' ');
@@ -89,6 +90,7 @@
       return lines.join('\n');
     }
 
+    // contraste do rótulo
     function hexToRgb(hex) {
       const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [0,0,0];
@@ -105,6 +107,7 @@
       return luminance(bg) > 0.55 ? "#111" : "#fff";
     }
     function themeOf(p) {
+      // treePathInfo: [root, tema, item]
       return p && p.treePathInfo && p.treePathInfo[1] ? p.treePathInfo[1].name : undefined;
     }
 
@@ -119,11 +122,15 @@
         data: data.children,
         radius: [50, '90%'],
         sort: null,
-        nodeClick: false,               // ← desativa ações ao clicar
-        animation: false,               // rótulos mais estáveis
-        emphasis: { focus: 'ancestor' },// destaque só no hover
 
-        // padrão
+        // >>> desativa comportamento de clique/zoom/drilldown
+        nodeClick: false,
+        selectedMode: false,
+
+        // destaque só quando passar o mouse
+        emphasis: { focus: 'self', blurScope: 'coordinateSystem' },
+
+        // rótulos padrão
         label: {
           show: true,
           rotate: 'tangential',
@@ -133,13 +140,13 @@
         levels: [
           {}, // raiz oculta
 
-          // Anel interno (TEMAS: Perfil, Fonte de Madeira, ...)
+          // Anel interno (TEMAS)
           {
             r0: 50, r: 120,
             label: {
               rotate: 0,
-              fontWeight: 'normal',     // ← sem negrito
-              fontSize: 8,              // ← fonte 8
+              fontWeight: 'normal',     // sem negrito
+              fontSize: 8,              // fonte 8
               color: p => labelColorForTheme(p.name),
               overflow: 'break',
               lineHeight: 10,
@@ -147,13 +154,13 @@
             }
           },
 
-          // Anel externo (itens/fatias)
+          // Anel externo (itens)
           {
             r0: 120, r: '90%',
             label: {
               show: true,
               rotate: 'tangential',
-              fontSize: 8,              // ← fonte 8
+              fontSize: 8,              // fonte 8
               color: p => labelColorForTheme(themeOf(p)),
               minAngle: 4,
               overflow: 'break',
@@ -164,8 +171,14 @@
         ]
       }],
       tooltip: {
+        trigger: 'item',
         formatter: (p) => p.treePathInfo.map(d => d.name).slice(1).join(' → ') + ': ' + p.value
       }
+    });
+
+    // Garantia extra: se ainda houver algum efeito ao clicar, "limpa" na hora
+    chart.on('click', function () {
+      chart.dispatchAction({ type: 'downplay', seriesIndex: 0 });
     });
 
     window.addEventListener('resize', () => chart.resize());
