@@ -12,10 +12,15 @@
     --shadow:0 10px 30px rgba(0,0,0,.10);
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);font:500 16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--txt)}
-  .layout{display:grid;grid-template-columns:minmax(320px,1.2fr) minmax(320px,0.9fr);gap:16px;max-width:1400px;margin:0 auto;padding:16px}
+  html,body{margin:0;background:var(--bg);font:500 16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--txt)}
+  .layout{
+    display:grid;
+    grid-template-columns: minmax(360px, 1fr) 460px;  /* direita fixa para não cortar */
+    gap:16px; max-width:1400px; margin:0 auto; padding:16px;
+    align-items:start;
+  }
   .card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:16px}
-  #chart{height:calc(100vh - 48px);min-height:520px}
+  #chart{width:100%; height:clamp(420px, 72vh, 900px);} /* responsivo e sem corte */
   h1{margin:0 0 8px;font-size:18px}
   .muted{color:#6b7280;font-size:13px}
   .ind-title{display:flex;align-items:flex-end;gap:8px}
@@ -36,7 +41,7 @@
   <div class="card">
     <h1>Caracterização de Fornecedores de lenha e cavaco - RS</h1>
     <div id="chart"></div>
-    <div class="muted">Clique em qualquer fatia para atualizar o indicador ao lado.</div>
+    <div class="muted">Clique em qualquer fatia para atualizar o indicador ao lado. Passe o mouse para ver o <b>Total</b> e o <b>%</b>.</div>
   </div>
 
   <!-- DIREITA: INDICADOR DINÂMICO -->
@@ -55,13 +60,13 @@
   // ---------- CONFIG ----------
   const DEFAULT_THEME = "Colheita Florestal"; // Troque se quiser outro tema inicial
 
-  // ---------- DADOS ----------
+  // ---------- DADOS (ajustados ao CSV que você enviou) ----------
   const data = {
     name: "Caracterização",
     children: [
       { name: "Perfil", children: [
-        { name: "Silvicultor", value: 50 },
-        { name: "Compra madeira em pé", value: 10 }
+        { name: "Silvicultor", value: 25 },
+        { name: "Compra madeira em pé", value: 5 }
       ]},
       { name: "Tamanho Propriedade", children: [
         { name: "Pequena (<10ha)", value: 13 },
@@ -85,7 +90,7 @@
     ]
   };
 
-  // Cores do sunburst (hex explícito; ECharts não lê var(--...))
+  // Cores do sunburst (hex explícito)
   const themeColorHEX = {
     "Perfil": "#f28e2c",
     "Tamanho Propriedade": "#6f6f6f",
@@ -107,6 +112,11 @@
     }
   }
   data.children.forEach(colorize);
+
+  // util: soma valores dos filhos
+  function sumChildren(node){
+    return (node.children || []).reduce((s,c)=>s + (c.value || 0), 0);
+  }
 
   // quebra de linhas p/ rótulos
   function wrap(name, max){ const w = String(name).split(' '); const out=[]; let cur='';
@@ -146,7 +156,29 @@
           }
         }
       ]
-    }]
+    }],
+    tooltip: {
+      trigger: 'item',
+      borderWidth: 0,
+      backgroundColor: 'rgba(17,17,17,.9)',
+      textStyle: { color:'#fff' },
+      formatter: (p) => {
+        const path = (p.treePathInfo||[]).map(d=>d.name).slice(1); // tira a raiz
+        // Se for filho: % relativo ao tema (pai). Se for tema: % do total geral
+        let pct = 0, base = 0;
+        if ((p.treePathInfo||[]).length >= 3) {
+          // filho → base = soma do tema
+          const themeName = p.treePathInfo[1].name;
+          const themeNode = data.children.find(d=>d.name===themeName);
+          base = sumChildren(themeNode);
+        } else {
+          // tema → base = total geral
+          base = data.children.reduce((s,n)=> s + sumChildren(n), 0);
+        }
+        pct = base ? (p.value / base * 100) : 0;
+        return `<b>${path.join(' → ')}</b><br/>Total: <b>${p.value}</b><br/>Percentual: <b>${pct.toFixed(1)}%</b>`;
+      }
+    }
   });
 
   // ------------------------------------------------
@@ -157,7 +189,7 @@
   const titleEl  = document.getElementById('indTitle');
   const chipEl   = document.getElementById('indChip');
 
-  // Paleta dos painéis (pode usar var() aqui porque é CSS no DOM)
+  // Paleta dos painéis (usa CSS var() pois é DOM, não canvas)
   const colorsPanel = {
     perfil: { a:"var(--perfil)", b:"#f7b267" },
     tamanho: { a:"var(--tam)", b:"#8a8a8a", c:"#a3a3a3" },
@@ -166,7 +198,6 @@
     fonte: { a:"var(--fon)", b:"#a63838", c:"#c25b5b" }
   };
 
-  // ordem das linhas por tema
   const indicatorMap = {
     "Perfil": [
       { key:"Silvicultor",              color: colorsPanel.perfil.a },
@@ -240,6 +271,7 @@
     }
   });
 
+  // resize
   window.addEventListener('resize', ()=>chart.resize());
 </script>
 </body>
