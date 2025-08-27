@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Indicador — Capacidade de Fornecimento</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --card:#ffffff; --txt:#1f2937;
+    --g:#4d87bd; --m:#6ba1d3; --p:#88b8e3;
+    --shadow:0 8px 24px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font:500 16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  .wrap{max-width:720px;margin:0 auto;padding:16px}
+  .card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:18px}
+  h1{margin:0 0 6px;font-size:18px;color:var(--txt)}
+  .row{display:flex;align-items:center;gap:12px;margin:10px 0}
+  .label{min-width:200px;font-size:14px;color:#374151}
+  .pct{margin-left:auto;font-weight:700;font-size:26px;color:#111}
+  .bar{height:8px;border-radius:999px;background:#e5e7eb;overflow:hidden}
+  .fill{height:100%}
+  .legend{display:flex;gap:12px;margin-top:10px;font-size:13px;color:#4b5563;flex-wrap:wrap}
+  .dot{width:12px;height:12px;border-radius:50%}
+  footer{margin-top:8px;font-size:12px;color:#6b7280}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Capacidade de Fornecimento</h1>
+
+    <div class="row">
+      <div class="label">Grande (&gt; 10.000 m³/ano)</div>
+      <div class="pct" id="pctG">--%</div>
+    </div>
+    <div class="bar"><div class="fill" id="barG" style="background:var(--g);width:0%"></div></div>
+
+    <div class="row">
+      <div class="label">Médio (1.000–10.000 m³/ano)</div>
+      <div class="pct" id="pctM">--%</div>
+    </div>
+    <div class="bar"><div class="fill" id="barM" style="background:var(--m);width:0%"></div></div>
+
+    <div class="row">
+      <div class="label">Pouco (1–1.000 m³/ano)</div>
+      <div class="pct" id="pctP">--%</div>
+    </div>
+    <div class="bar"><div class="fill" id="barP" style="background:var(--p);width:0%"></div></div>
+
+    <div class="legend">
+      <div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--g)"></span> Grande</div>
+      <div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--m)"></span> Médio</div>
+      <div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--p)"></span> Pouco</div>
+    </div>
+
+    <footer>Fonte: Caracterização de Fornecedores (seus dados)</footer>
+  </div>
+</div>
+
+<script>
+  // Valores do seu estudo (capacidade): Grande=13, Médio=8, Pouco=9
+  const valores = { g:13, m:8, p:9 };
+  const total = valores.g + valores.m + valores.p;
+  function pct(x){ return total ? (Math.round(x/total*1000)/10).toFixed(1)+'%' : '0%'; }
+
+  document.getElementById('pctG').textContent = pct(valores.g);
+  document.getElementById('pctM').textContent = pct(valores.m);
+  document.getElementById('pctP').textContent = pct(valores.p);
+
+  document.getElementById('barG').style.width = (valores.g/total*100)+'%';
+  document.getElementById('barM').style.width = (valores.m/total*100)+'%';
+  document.getElementById('barP').style.width = (valores.p/total*100)+'%';
+</script>
+</body>
+</html>
