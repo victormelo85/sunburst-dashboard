@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sunburst — Fornecedores de lenha e cavaco - RS</title>
-  <!-- ECharts (CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
   <style>
     html, body { height: 100%; margin: 0; }
@@ -16,7 +15,7 @@
 
   <script>
     // =========================
-    // 1) DADOS (pode editar)
+    // 1) DADOS
     // =========================
     const data = {
       name: "Caracterização de Fornecedores",
@@ -47,10 +46,10 @@
       ]
     };
 
-    // Paleta por tema (pode ajustar cores)
+    // Paleta por tema
     const palette = {
       "Perfil": "#f28e2c",
-      "Tamanho Propriedade": "#6f6f6f",          // cinza mais escuro p/ dar contraste
+      "Tamanho Propriedade": "#6f6f6f",
       "Capacidade de Fornecimento": "#4d87bd",
       "Colheita Florestal": "#8bc34a",
       "Fonte de Madeira": "#8b0000"
@@ -59,8 +58,6 @@
     // =========================
     // 2) UTILITÁRIOS
     // =========================
-
-    // aplica cor do "tema" em todos os filhos
     function applyColors(node){
       if(node.children){
         node.itemStyle = node.itemStyle || {};
@@ -74,7 +71,6 @@
     }
     data.children.forEach(applyColors);
 
-    // quebra nomes longos em várias linhas (N ≈ caracteres por linha)
     function wrapName(name, maxPerLine) {
       if (!name) return '';
       const words = String(name).split(' ');
@@ -93,7 +89,6 @@
       return lines.join('\n');
     }
 
-    // util: converte #RRGGBB -> luminância (0..1) para decidir cor do rótulo
     function hexToRgb(hex) {
       const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [0,0,0];
@@ -103,16 +98,13 @@
         v /= 255;
         return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4);
       });
-      return 0.2126*r + 0.7152*g + 0.0722*b; // WCAG
+      return 0.2126*r + 0.7152*g + 0.0722*b;
     }
     function labelColorForTheme(themeName) {
       const bg = palette[themeName] || "#666";
-      return luminance(bg) > 0.55 ? "#111" : "#fff"; // claro -> texto escuro; escuro -> texto claro
+      return luminance(bg) > 0.55 ? "#111" : "#fff";
     }
-
-    // retorna o nome do "tema" (anel interno) do rótulo atual
     function themeOf(p) {
-      // treePathInfo: [root, tema, item]
       return p && p.treePathInfo && p.treePathInfo[1] ? p.treePathInfo[1].name : undefined;
     }
 
@@ -127,43 +119,45 @@
         data: data.children,
         radius: [50, '90%'],
         sort: null,
-        emphasis: { focus: 'ancestor' },
+        nodeClick: false,               // ← desativa ações ao clicar
+        animation: false,               // rótulos mais estáveis
+        emphasis: { focus: 'ancestor' },// destaque só no hover
 
-        // rótulos padrão
+        // padrão
         label: {
           show: true,
-          rotate: 'tangential'
+          rotate: 'tangential',
+          minAngle: 4
         },
 
-        // níveis (ajuste os fontSize para mais/menos)
         levels: [
-          {}, // raiz (oculta)
+          {}, // raiz oculta
 
-          // Anel dos TEMAS (Perfil, Tamanho Propriedade, ...)
+          // Anel interno (TEMAS: Perfil, Fonte de Madeira, ...)
           {
             r0: 50, r: 120,
             label: {
               rotate: 0,
-              fontWeight: 'bold',
-              color: '#222',
-              fontSize: 12,                 // ← diminua/aumente aqui
+              fontWeight: 'normal',     // ← sem negrito
+              fontSize: 8,              // ← fonte 8
+              color: p => labelColorForTheme(p.name),
               overflow: 'break',
-              lineHeight: 12,
+              lineHeight: 10,
               formatter: p => wrapName(p.name, 18)
             }
           },
 
-          // Anel EXTERNO (itens/fatias)
+          // Anel externo (itens/fatias)
           {
             r0: 120, r: '90%',
             label: {
               show: true,
               rotate: 'tangential',
-              fontSize: 10,                 // ← diminua (9/8) se quiser menor
-              minAngle: 5,
-              overflow: 'break',
-              lineHeight: 12,
+              fontSize: 8,              // ← fonte 8
               color: p => labelColorForTheme(themeOf(p)),
+              minAngle: 4,
+              overflow: 'break',
+              lineHeight: 10,
               formatter: p => wrapName(p.name, 14)
             }
           }
